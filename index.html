@@ -31,10 +31,9 @@
 </main>
 <script>
     (() => {
-        const TOKEN = 'ba67df6a-a17c-476f-8e95-bcdb75ed3958';
-        const ADD_URL = 'https://crm.belmar.pro/api/v1/addlead';
-        let USER_IP = '';
+        const ADD_URL = '/proxy.php?action=addlead';
 
+        let USER_IP = '';
         fetch('https://api.ipify.org?format=json')
             .then(r => r.json())
             .then(d => USER_IP = d?.ip || '')
@@ -45,7 +44,6 @@
 
         form.addEventListener('submit', async e => {
             e.preventDefault();
-            result.textContent = 'Отправляем...';
 
             const fd = new FormData(form);
             const payload = {
@@ -70,10 +68,7 @@
             try {
                 const resp = await fetch(ADD_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'token': TOKEN
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
                 const data = await resp.json();
@@ -87,7 +82,7 @@
                     </div>`;
                     form.reset();
                 } else {
-                    console.error(data?.error);
+                    console.error(data?.error);d
                 }
             } catch (e) {
                 console.error(e);
@@ -95,5 +90,6 @@
         });
     })();
 </script>
+
 </body>
 </html>

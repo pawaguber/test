@@ -42,15 +42,13 @@
 </main>
 <script>
     (() => {
-        const TOKEN = 'ba67df6a-a17c-476f-8e95-bcdb75ed3958';
-        const GET_URL = 'https://crm.belmar.pro/api/v1/getstatuses';
+        const GET_URL = '/proxy.php?action=getstatuses';
         const df = document.getElementById('date_from');
         const dt = document.getElementById('date_to');
         const limit = document.getElementById('limit');
         const tbody = document.querySelector('#statusTable tbody');
         const msg = document.getElementById('msg');
         const filterForm = document.getElementById('filterForm');
-
         const pad = n => n < 10 ? '0' + n : n;
         const toLocalDTValue = d => {
             const yyyy = d.getFullYear();
@@ -58,13 +56,12 @@
             const DD = pad(d.getDate());
             const hh = pad(d.getHours());
             const mm = pad(d.getMinutes());
-            return `${yyyy}-${MM}-${DD}T${hh}:${mm}`;
+            return `${yyyy}-${MM}-${DD} ${hh}:${mm}:00`;
         };
         const now = new Date();
         const minus30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
         df.value = toLocalDTValue(minus30);
         dt.value = toLocalDTValue(now);
-
         const toApiFormatLocal = dtStr => {
             if (!dtStr) return '';
             const d = new Date(dtStr);
@@ -75,7 +72,6 @@
             const mm = pad(d.getMinutes());
             return `${yyyy}-${MM}-${DD} ${hh}:${mm}:00`;
         };
-
         const loadStatuses = async e => {
             if (e) e.preventDefault();
             tbody.innerHTML = '';
@@ -83,21 +79,18 @@
                 date_from: toApiFormatLocal(df.value),
                 date_to: toApiFormatLocal(dt.value),
                 page: 0,
-                limit: Math.max(1, Math.min(500, Number(limit.value) || 100))
+                limit: Math.max(1, Math.min(500, Number(limit.value) || 100)),
             };
 
             try {
                 const resp = await fetch(GET_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'token': TOKEN
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 });
                 const data = await resp.json();
                 if (data?.status) {
-                    const rows = data.data;
+                    const rows = data.data || [];
                     if (!rows.length) {
                         msg.textContent = 'Нет данных за выбранный период.';
                     } else {
@@ -114,9 +107,11 @@
                         tbody.appendChild(fr);
                         msg.textContent = `Показано записей: ${rows.length}`;
                     }
+                } else {
+                    console.log('error')
                 }
-            } catch (e) {
-                console.error(e);
+            } catch (err) {
+                console.error(err);
             }
         };
 
@@ -124,5 +119,6 @@
         loadStatuses();
     })();
 </script>
+
 </body>
 </html>
