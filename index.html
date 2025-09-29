@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Добавить лида</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<nav class="nav">
+    <a href="index.html" class="active">Добавить лид</a>
+    <a href="statuses.html">Статусы лидов</a>
+</nav>
+<main class="container">
+    <h1>Добавление лида</h1>
+    <form id="leadForm" class="card">
+        <div class="grid">
+            <label>Имя*<input name="firstName" required></label>
+            <label>Фамилия*<input name="lastName" required></label>
+            <label>Телефон*<input name="phone" required></label>
+            <label>Пошта*<input name="email" type="email" required></label>
+        </div>
+        <input type="hidden" name="box_id" value="28">
+        <input type="hidden" name="offer_id" value="5">
+        <input type="hidden" name="countryCode" value="GB">
+        <input type="hidden" name="language" value="en">
+        <input type="hidden" name="password" value="qwerty12">
+        <button type="submit">Отправить</button>
+    </form>
+    <div id="result" class="result"></div>
+</main>
+<script>
+    (() => {
+        const TOKEN = 'ba67df6a-a17c-476f-8e95-bcdb75ed3958';
+        const ADD_URL = 'https://crm.belmar.pro/api/v1/addlead';
+        let USER_IP = '';
+
+        fetch('https://api.ipify.org?format=json')
+            .then(r => r.json())
+            .then(d => USER_IP = d?.ip || '')
+            .catch(() => USER_IP = '');
+
+        const form = document.getElementById('leadForm');
+        const result = document.getElementById('result');
+
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            result.textContent = 'Отправляем...';
+
+            const fd = new FormData(form);
+            const payload = {
+                firstName: fd.get('firstName').trim(),
+                lastName: fd.get('lastName').trim(),
+                phone: fd.get('phone').trim(),
+                email: fd.get('email').trim(),
+                countryCode: fd.get('countryCode'),
+                box_id: Number(fd.get('box_id')),
+                offer_id: Number(fd.get('offer_id')),
+                landingUrl: window.location.origin,
+                ip: USER_IP,
+                password: fd.get('password'),
+                language: fd.get('language')
+            };
+
+            if (!payload.firstName || !payload.lastName || !payload.phone || !payload.email) {
+                result.textContent = 'Заполните все обязательные поля.';
+                return;
+            }
+
+            try {
+                const resp = await fetch(ADD_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': TOKEN
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (data?.status) {
+                    result.innerHTML = `
+                    <div class="ok">
+                        Успешно!<br>
+                        id: <b>${data.id}</b><br>
+                        email: <b>${data.email}</b><br>
+                        ${data.autologin ? `<a href="${data.autologin}" target="_blank" rel="noopener">autologin</a>` : ''}
+                    </div>`;
+                    form.reset();
+                } else {
+                    console.error(data?.error);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        });
+    })();
+</script>
+</body>
+</html>
